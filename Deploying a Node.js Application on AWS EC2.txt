@@ -1,0 +1,75 @@
+						Deploying a Node.js Application on AWS EC2 (Amazon Linux)
+
+I am going to deploy a simple Node.js web application on a cloud server using AWS EC2.
+
+Technologies used :
+1.Node.js  - Node.js is a tool that allows JavaScript to run on the server
+2.AWS 	    - Cloud Platform
+3.EC2		-Virtual Machine
+4.Amazon Linux AMI  - it is a preinstalled operating system.
+
+
+Architecture of This Project
+
+			(User -> Browser -> Public IP -> EC2 Instance -> Node.js Server -> Response)
+
+
+-----Simple Flow
+1.User types public IP in browser
+2.Browser send request to ec2
+3.EC2 run Node.js
+4.Node send responce
+5.Browser display output
+
+
+-----Step 1: Create EC2 Instance
+
+Go to Aws terminal then go to ec2 click lanunch instamce, then give a name to your instance , select Linux AMI , choose t2.micro  instace type, then create a keypair value it's not mandatory as yout wish then create .pem or putty If you create with putty you have to install putty application in your OS what you are using . If you create with .pem file you can connect with AWS terminal or in your local machine also by downloading the application like eg :MobaXterm , Next Allow HTTP (port 80) , all set now LAUNCH INSTANCE.
+
+------Step 2:Connect to EC2 
+
+we connect using SSH , Because EC2 is a linux Server , We control using terminal like 
+ 	ssh -i abc.pem ec2-user@3.111.36.202 
+
+ 						(OR)
+Just go to the EC2 instance just connect there then AWS terminal will open this is also fine.
+
+	Next do (Sudo su)  -Sudo-it means Super user Do , Su- switch to root user when you launch a VM AWS EC2, it does NOT allow direct root login for security reasons 
+So, we use sudo su for root user , root can Install software ,Delete any file , Change system settings ,Create users  Stop services .
+
+-----Step 3 :Install node.js , npm , git 
+
+sudo yum install git -y
+sudo yum install nodejs -y
+
+Check:
+node -v
+npm -v
+
+-----Step 4 :Download Project Code
+
+Clone fro GitHub Repo --  git clone https://github.com/rajani103/nodejs-on-ec2 , then 
+(cd nodejs-on-ec2) this will move to the directory the=at is present in a github
+the file has index.js folder is there there you can edit the text what you want to display in the browser.
+
+-----Step 5 : Install Project Dependencies
+
+npm install -- This downloads all required packages.
+
+------Step : 6 Run the application 
+
+node index.js
+
+Node.js starts a server it listens on Port 80 and waiting for browser request
+
+	Then you may see : --Server running on port 80
+
+----Step : 7 : Open in Browser 
+
+then type your public ip address your message will display in the browser.
+
+
+
+
+
+
