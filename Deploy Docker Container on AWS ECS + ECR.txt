@@ -1,0 +1,163 @@
+						Deploy Docker Container on AWS ECS + ECR
+
+This task  is about Deploying a Docker containerized Node.js application on AWS without managing servers.
+Instead of installing node.js directly on EC2 in previous project here we 
+	-->create a docker image
+	-->push to Artifact reg (ECR)
+	-->Deploy container usig ECS
+
+Technologies used :
+1.Docker
+2.Amazon ECR --> private Docker registry | use ECR Because ECS needs a place to pull Docker images 
+										
+						Flow:
+							   Docker image --> Push to ECR --> ECS pulls image --> Runs container
+
+3.Amazon ECS -container orchestration service. it can start, stop, restart if crash , attach LB etc,,,
+
+Why not just use EC2??
+
+PART 1 :
+
+		Before start  you need 
+			1.aws acc
+			2.docker in local
+			3.aws cli
+			4.git install
+PART 2 :
+
+--Clone the application 
+
+git clone https://github.com/piyushgarg-dev/nodejs-docker-example.git
+cd nodejs-docker-example
+
+--Build Docker Image inside folder
+
+docker build -t my-node-app .
+this does read dockerfile , install node , copies files ,,
+
+--check image:
+
+docker images 
+
+--Run container locally 
+
+docker run -p 8000:8000 my-node-app
+open brower https:local 8000
+
+if it work good , Stop container 
+
+Part 3 :
+
+--step 4 : push image to AWS ECR
+ Go to ECR create Repo name it as ghaz-server , keep default settings , then Click repository-> Click "View push commands"
+run all the cmds in terminal  this connets Docker to AWS , there are 4 cmds are there execue all .
+
+PART 4 :
+
+--step 8 :Create ECS Cluster
+
+Go to ECS create cluster , choose network fargate give name like (my-cluster) then create.
+
+--step 9 :Create Task defination (blueprint of a  container )
+
+Go to ECS --> Task Definations click create , choose fargate and make a name like (my-task), task size CPU and memory make it as default (or) 512 MEMORY 
+
+Add Container : Click add container and give container name (my-node-container) Now (Image) copy image URL from ECR.
+
+port mapping 8000 then create task .
+
+
+Step 10 :
+Service runs and maintains containers.
+
+Go to ECS -->cluster , click your cluster , click create service , launch type Fargate , give desired tasks (2) , that mean 2 containers will run 
+
+Step 11 :
+Configure Network make it as a default
+
+Step 12 :
+Add LoadBalancer
+
+Choose Loadbalancer type  Application LoadBalancer and choose container also  that you created select that one 
+Now  Create one new LB and make a name (ghaz-server-lb) 
+
+Add LISTENER
+Create new lintener port 80 , protocal HTTP , Crete new Target group make a target group name and make a protocal HTTP 
+
+Service Auto Scaling , click the check box of the auto scaling , Maximum numer of tasks (2) ,Maximum number of tasks(10)
+
+Now our service is running with two task (container) as we define minimum value to 2
+
+Step 13 :
+Now you can access your application through loadbalancer , copy DNS name 
+open Browser paste your link like http://load-balancer-dns
+your app will load 
+
+				INTERNALLY :
+							User --> Load Balancer --> ECS Service --> Task --> Container --> Node App
+
+If 1 container crashes:ECS automatically creates new one.If traffic increases , You can scale to 5, 10 containers.
+
+
+FINAL ARCHITECTURE : 
+				
+					Internet --> Loadbalancer -->ECS Service --> 2 running containers -->Docker image from ECR.
+
+
+Explanation :
+
+After pushing image to Amazon ECR, the image is stored in AWS , ut image is just a file , it won't run 
+So question is --> who wil run ? Where will it run ? How user access ?
+That is why we use ECS
+
+--1.Cluster is like a workspace where container run , without cluster ECS has no place to run containers , So cluster is required 
+
+
+--2. We create Task Definations,  is very important  it is like Instruction manual for container , It tells ECS
+Which image to use , How much CPU , How much memory , Which port to open,  Environment variables,  Health check
+
+Without task definition: ECS doesn’t know: What to run, How to run , With what resources
+
+
+--3. Why we create service : Task definition only describes container, It does NOT run it permanently,So we create a Service.
+	(Service means Keep this container running always)
+
+If you set desired task =2
+service will start (2) containers , if 1 crash --> start new one , always maintain 2 running 
+
+--4. Why choose Fargate
+
+ECS has 2 options 
+
+	1.EC2 mode
+	2.Fargate mode
+
+We choose Fargate because we don't manage manually 
+
+If choose EC2 -We must launch EC2 , Patch OS , Manage scaling , Maintain instances.
+With Fargate - AWS manage server , we only manage container 
+
+--5. We used Configured Network
+Because containers need internet access we choose VPC, SUBNET, PUBLIC IP , so user access from internet , without public network the pp runs but no one can access it 
+
+--6. ADD load balancer 
+
+
+--7.
+We set desired task (2)
+
+Because:
+if 1 container crashes , app goes down , if 2 containers are there if 1 crash another one is available.
+
+		FULL FLOW:
+					1️.You build Docker image
+					2️.Push to ECR
+					3️.Create ECS Cluster (workspace)
+					4️.Create Task Definition (container blueprint)
+					5️.Create Service (run and maintain container)
+					6️.Attach Load Balancer (traffic distribution)
+					7.App becomes public.
+
+
+
