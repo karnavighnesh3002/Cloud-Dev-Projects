@@ -1,0 +1,105 @@
+			Deploying Highly Available Web Application using Load Balancer on AWS
+
+In this project we create a simple web app using 
+1.AWS
+2.EC2
+3.ALB
+
+	the goal is like to run a website on a multiple serves , distribute traffic , avoid down time , Understand real production architecture
+
+
+Problem we are solving is if we use EC2 server only 
+If server crashes --> Website goes down 
+If too many users come --> Server becomes slow 
+
+To solve this we create multiple servers and use a LB
+
+		ARCHITECTURE :
+			Users --> Load Baancer --> Target Group --> EC2 instance --> Apache Website
+
+
+Step 1 : 
+
+Create TWO EC2 instances , give name  instance type , key pair , networ settings make it as default  and security group add inbound rules SSH and HTTP port is 22 and 80 and source is MYIP and 0.0.0.0/0 , next go to additional settings in that user data add the thing 
+
+#!/bin/bash
+apt update -y
+apt install apache2 -y
+systemctl start apache2
+systemctl enable apache2
+echo "<h1>This is Server 1 - Karna</h1>" > /var/www/html/index.html
+
+Then launch instance , create the second instance with the same pattern but in that user data add different matter 
+echo "<h1>This is server 2 :)</h1>" > /var/www/html/index.html
+
+Step 2 :
+verify EC2 servers copy the  public ip address paster in browser you see a message that is present in the server , if this is working properly the next step is to create Target group
+
+Step 3 :
+
+Create Target group 
+
+Go to EC2 dashboard --> Target group --> create one
+
+Target type instances and give name , HTTP protocal , port 80 , vpv default , click next 
+
+Register targets you see 2 instances select those and click Create target group 
+
+Step 4 :
+Create ALB 
+
+Go to EC2--> Loadbalancer click create 
+
+Give name then schema is internet-facing IP type is -->IPv4 , vpc is defalut keep next select 2 AZs , select public subnet
+Security group make it as default (or) create a new group in that add inbound HTTP , port 80 , source 0.0.0.0/0 , then click on create for LoadBalancer
+
+Step 4:
+Check Target Health
+
+Go to target groups , click your target group that you created , go to targe tab , there you see two instances check the instances health if both are healthy then proceed for next step
+
+step 5 :
+Test Load Balancer 
+
+EC2--> Loadbalancer click your Load Balancer , copy the DNS and paste in a browser like 
+			http://http://my-alb-64684314.ap-south-1.elb.amazonaws.com/
+
+		Now you refresh multiple multiple times 
+
+		You should see like :
+		Server 1
+		Server 2 
+		Server 1
+		Server 2
+
+			The traffic is distributed
+
+
+					User --> ALB --> Target Group --> EC2 instance
+
+
+Here Target Group is very important because the Target group is give list of servers that Load Balancer can send traffic to LB
+
+What happen withOut Target group 
+
+If Load balancer directly connected to EC2:
+
+no grouping
+no health check system
+no scaling support
+hard to manage multiple servers
+AWS design is modular
+
+
+LB - traffic Manager 
+TG - server manager
+
+
+Target group actually do is like 
+
+It starts checking every 30 seconds like are you alive 
+
+If Apache stops , Health check fails , Target Group marks Unhealthy 
+
+
+
