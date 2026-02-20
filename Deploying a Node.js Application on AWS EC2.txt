@@ -73,3 +73,15 @@ then type your public ip address your message will display in the browser.
 
 
 
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+this cmd is for  download and run the installation script for NVM (node version manager)
+nvm is best way to install node because it lets you switch b/w versions eassily
+
+. ~/.nvm/nvm.sh
+this activate NVM in your current terminal session 
+
+npm install
+read your package.json file and download all the libaries
+
+node index.js
+to run the application
